@@ -4,7 +4,7 @@ import networkx as nx
 
 def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument('input_filename', help="Input filename")
+    parser.add_argument('input_dot_filename', help="Input .dot file name")
     parser.add_argument('--target', help="Node to focus analysis on")
     return parser
 
@@ -21,7 +21,7 @@ def get_immediate_child_nodes(inG: nx.DiGraph, target_node: str):
 
 if __name__ == '__main__':
     args = setup_parser().parse_args()
-    inG = nx.DiGraph(nx.nx_pydot.read_dot(args.input_filename))
+    inG = nx.DiGraph(nx.nx_pydot.read_dot(args.input_dot_filename))
 
     if args.target is not None:
         get_immediate_child_nodes(inG, args.target)
