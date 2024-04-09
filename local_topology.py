@@ -6,7 +6,7 @@ def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument('input_dot_filename', help="Input .dot file name")
     parser.add_argument('input_cmds_filename', help="Path to instructions")
-    parser.add_argument('--twopi', help="Flag to use twopi when drawing")
+    parser.add_argument('--twopi', type=int, help="If set, use twopi at this ranksep value")
     return parser
 
 class OutputGraphBuilder:
@@ -90,9 +90,12 @@ if __name__ == '__main__':
     inG = nx.DiGraph(nx.nx_pydot.read_dot(args.input_dot_filename))
 
     outG = get_graph_to_draw(inG, args)
+    nx.nx_pydot.write_dot(outG, "out.dot")
 
-    dot_prog = "twopi" if args.twopi else None
-    nx.nx_pydot.to_pydot(outG).write_jpg("out.jpg", prog=dot_prog)
-
-    
+    if args.twopi is None:
+        nx.nx_pydot.to_pydot(outG).write_jpg("out.jpg")
+    else:
+        pydotG = nx.nx_pydot.to_pydot(outG)
+        pydotG.set_ranksep(args.twopi)
+        pydotG.write_jpg("out.jpg", prog="twopi")
 
