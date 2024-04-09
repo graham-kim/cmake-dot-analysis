@@ -41,7 +41,18 @@ class OutputGraphBuilder:
         to_name = self._add_out_node(to_node)
         self.outG.add_edge(from_name, to_name)
 
-    def add_immediate_child_nodes_of(self, target_node: str):
+    def add_predecessors_of(self, target_node: str):
+        self._add_out_node(target_node)
+
+        # TODO refactor with add_successors_of()
+        target_node_name = self._get_input_node_name_from_label(target_node)
+        other_node_names = list(self.inG.predecessors(target_node_name))
+        for other_node_name in other_node_names:
+            self._add_out_node(other_node_name, is_label=False)
+            # TODO note reverse direction here
+            self.outG.add_edge(other_node_name, target_node_name)
+
+    def add_successors_of(self, target_node: str):
         self._add_out_node(target_node)
 
         target_node_name = self._get_input_node_name_from_label(target_node)
@@ -73,7 +84,9 @@ def get_graph_to_draw(inG: nx.DiGraph, args) -> nx.DiGraph:
                 for i in range(1,len(tokens)):
                     if tokens[i] == "*":
                         assert tokens[i-1] != "*", f"Can't have double * around '->':\n{line}"
-                        builder.add_immediate_child_nodes_of(tokens[i-1])
+                        builder.add_successors_of(tokens[i-1])
+                    elif tokens[i-1] == "*":
+                        builder.add_predecessors_of(tokens[i])
                     else:
                         builder.add_link_between(tokens[i-1], tokens[i])
             elif "==>" in line:

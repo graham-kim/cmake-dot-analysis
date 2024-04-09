@@ -25,4 +25,7 @@ digraph G {
     node13 [label=BCAB, shape=octagon];
     node11 -> node12;
     node11 -> node13;
+    node14 [label=XXA, shape=hexagon];
+    node5 -> node14;
+    node6 -> node14;
 }
