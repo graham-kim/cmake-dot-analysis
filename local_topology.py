@@ -72,29 +72,33 @@ class OutputGraphBuilder:
             self._add_out_node(chain_of_names[i], is_label=False)
             self.outG.add_edge(chain_of_names[i-1], chain_of_names[i])
 
+def parse_line(line: str, builder: OutputGraphBuilder):
+    if "->" in line:
+        tokens = line.split("->")
+        assert len(tokens) > 1, f"Need >= 1 token around '->':\n{line}"
+        tokens = [tok.strip() for tok in tokens]
+        for i in range(1,len(tokens)):
+            if tokens[i] == "*":
+                assert tokens[i-1] != "*", f"Can't have double * around '->':\n{line}"
+                builder.add_successors_of(tokens[i-1])
+            elif tokens[i-1] == "*":
+                builder.add_predecessors_of(tokens[i])
+            else:
+                builder.add_link_between(tokens[i-1], tokens[i])
+    elif "==>" in line:
+        tokens = line.split("==>")
+        assert len(tokens) == 2, f"Only 1 token allowed before and after '==>':\n{line}"
+        tokens = [tok.strip() for tok in tokens]
+
+        builder.add_chain_of_nodes(tokens[0], tokens[1])
+
+
 def get_graph_to_draw(inG: nx.DiGraph, args) -> nx.DiGraph:
     builder = OutputGraphBuilder(inG)
 
     with open(args.input_cmds_filename, 'r') as inF:
         for line in inF:
-            if "->" in line:
-                tokens = line.split("->")
-                assert len(tokens) > 1, f"Need >= 1 token around '->':\n{line}"
-                tokens = [tok.strip() for tok in tokens]
-                for i in range(1,len(tokens)):
-                    if tokens[i] == "*":
-                        assert tokens[i-1] != "*", f"Can't have double * around '->':\n{line}"
-                        builder.add_successors_of(tokens[i-1])
-                    elif tokens[i-1] == "*":
-                        builder.add_predecessors_of(tokens[i])
-                    else:
-                        builder.add_link_between(tokens[i-1], tokens[i])
-            elif "==>" in line:
-                tokens = line.split("==>")
-                assert len(tokens) == 2, f"Only 1 token allowed before and after '==>':\n{line}"
-                tokens = [tok.strip() for tok in tokens]
-
-                builder.add_chain_of_nodes(tokens[0], tokens[1])
+            parse_line(line, builder)
 
     return builder.outG
 
