@@ -3,6 +3,10 @@ import argparse
 import networkx as nx
 from pathlib import Path
 import sys
+import io
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
 
 def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
@@ -101,6 +105,15 @@ def parse_line(line: str, builder: OutputGraphBuilder, outF):
     if save_line:
         outF.write(line+"\n")
 
+def view_pydot(pdot):
+    png_str = pdot.create_png(prog='dot')
+    sio = io.BytesIO()
+    sio.write(png_str)
+    sio.seek(0)
+    img = mpimg.imread(sio)
+
+    plt.imshow(img, aspect='equal')
+    plt.show()
 
 def get_graph_to_draw(inG: nx.DiGraph, args) -> nx.DiGraph:
     builder = OutputGraphBuilder(inG)
@@ -119,6 +132,7 @@ def get_graph_to_draw(inG: nx.DiGraph, args) -> nx.DiGraph:
                 if line.strip() == "exit":
                     break
                 parse_line(line.strip(), builder, outF)
+                view_pydot(nx.nx_pydot.to_pydot(builder.outG))
 
     return builder.outG
 
