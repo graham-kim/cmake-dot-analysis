@@ -81,6 +81,8 @@ class OutputGraphBuilder:
 
 def parse_line(line: str, builder: OutputGraphBuilder, outF):
     save_line = True
+    num_nodes_before = builder.outG.number_of_nodes()
+    num_edges_before = builder.outG.number_of_edges()
     if "->" in line:
         tokens = line.split("->")
         assert len(tokens) > 1, f"Need >= 1 token around '->':\n{line}"
@@ -103,7 +105,15 @@ def parse_line(line: str, builder: OutputGraphBuilder, outF):
         save_line = False
 
     if save_line:
-        outF.write(line+"\n")
+        num_nodes_after = builder.outG.number_of_nodes()
+        num_edges_after = builder.outG.number_of_edges()
+
+        if ( num_nodes_after != num_nodes_before \
+          or num_edges_after != num_edges_before):
+
+            outF.write(line+"\n")
+        else:
+            print(f"This line did nothing: {line}")
 
 def view_pydot(pdot):
     png_str = pdot.create_png(prog='dot')
