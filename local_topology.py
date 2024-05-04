@@ -1,6 +1,7 @@
 import typing as tp
 import argparse
 import networkx as nx
+from pathlib import Path
 
 def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
@@ -72,7 +73,8 @@ class OutputGraphBuilder:
             self._add_out_node(chain_of_names[i], is_label=False)
             self.outG.add_edge(chain_of_names[i-1], chain_of_names[i])
 
-def parse_line(line: str, builder: OutputGraphBuilder):
+def parse_line(line: str, builder: OutputGraphBuilder, outF):
+    save_line = True
     if "->" in line:
         tokens = line.split("->")
         assert len(tokens) > 1, f"Need >= 1 token around '->':\n{line}"
@@ -91,14 +93,23 @@ def parse_line(line: str, builder: OutputGraphBuilder):
         tokens = [tok.strip() for tok in tokens]
 
         builder.add_chain_of_nodes(tokens[0], tokens[1])
+    else:
+        save_line = False
+
+    if save_line:
+        outF.write(line+"\n")
 
 
 def get_graph_to_draw(inG: nx.DiGraph, args) -> nx.DiGraph:
     builder = OutputGraphBuilder(inG)
+    history_file = Path("history.txt")
+    if history_file.exists():
+        history_file.unlink()
 
-    with open(args.input_cmds_filename, 'r') as inF:
-        for line in inF:
-            parse_line(line, builder)
+    with open(history_file, 'w') as outF:
+        with open(args.input_cmds_filename, 'r') as inF:
+            for line in inF:
+                parse_line(line.strip(), builder, outF)
 
     return builder.outG
 
