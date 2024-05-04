@@ -2,11 +2,13 @@ import typing as tp
 import argparse
 import networkx as nx
 from pathlib import Path
+import sys
 
 def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument('input_dot_filename', help="Input .dot file name")
     parser.add_argument('input_cmds_filename', help="Path to instructions")
+    parser.add_argument('-i', action='store_true', help="Parse extra commands from stdin after input_cmds_filename contents")
     parser.add_argument('--twopi', type=int, help="If set, use twopi at this ranksep value")
     return parser
 
@@ -109,6 +111,13 @@ def get_graph_to_draw(inG: nx.DiGraph, args) -> nx.DiGraph:
     with open(history_file, 'w') as outF:
         with open(args.input_cmds_filename, 'r') as inF:
             for line in inF:
+                parse_line(line.strip(), builder, outF)
+
+        if args.i:
+            print("enter 'exit' to end")
+            for line in sys.stdin:
+                if line.strip() == "exit":
+                    break
                 parse_line(line.strip(), builder, outF)
 
     return builder.outG
