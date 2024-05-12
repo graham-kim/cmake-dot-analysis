@@ -21,10 +21,17 @@ class OutputGraphBuilder:
         self.inG = inG
         self.outG = nx.DiGraph()
 
-    def _get_input_node_name_from_label(self, node_label: str) -> str:
+    def _get_input_node_name_from_label(self, search_term: str) -> str:
         # TODO store in dict to avoid repeat lookups
-        candidates = [name for name,props in self.inG.nodes(data=True) if props['label']==node_label]
-        assert len(candidates) == 1, f"Did not find unique node name for label:\n{node_label} -> {candidates}"
+        def is_hit(props: tp.Dict[str, str], search_term: str) -> bool:
+            if 'label' not in props:
+                return False
+            tok = props['label'].strip('<').strip('>').split('<BR/>')
+            return search_term == tok[0]
+
+        candidates = [name for name,props in self.inG.nodes(data=True) if is_hit(props, search_term)]
+        assert len(candidates) > 0, f"Did not find any node name for label:\n{search_term}"
+        assert len(candidates) == 1, f"Did not find unique node name for label:\n{search_term} -> {candidates}"
         return candidates[0]
 
     def _add_out_node(self, node: str, is_label: bool=True) -> str:
